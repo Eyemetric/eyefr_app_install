@@ -1,4 +1,9 @@
 [all]
 dev-home ansible_host=192.168.0.28
 
+[gpu]
+dev-home ansible_host=192.168.0.28
+
+[cpu]
+
 [all:vars]
