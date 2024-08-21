@@ -1,0 +1,29 @@
+---
+- name: Paravision Podman Down
+  hosts: localhost
+  tasks:
+    - name: Stop and remove pvdb container
+      community.podman.podman_container:
+        name: "{{ pvdb_cpu }}"
+        state: absent
+      tags:
+        - pvdb
+    - name: Stop and remove ident v4 container
+      community.podman.podman_container:
+        name: "{{ ident_cpu }}"
+        state: absent
+      tags:
+        - ident
+
+    - name: Stop and remove ident proc v6 container
+      community.podman.podman_container:
+        name: "{{ proc_cpu }}"
+        state: absent
+      tags:
+        - proc
+    - name: Stop and remove ident pvstrm container
+      community.podman.podman_container:
+        name: "{{ pvstrm_cpu }}"
+        state: absent
+      tags:
+        - stream

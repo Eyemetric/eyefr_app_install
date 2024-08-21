@@ -1,0 +1,14 @@
+---
+- name: Install EyeFR (SAFR)
+  hosts: all
+  become: true
+  vars:
+    ansible_become_pass: "{{ host_sudo_pass[inventory_hostname] | default(default_sudo_pass) }}"
+    release_version: "1.6.2" 
+  roles:
+    - { role: paravision.v6, tags: ["paravision"] }
+    - { role: eyemetric.eyefr, tags: ["eyefr"], vars: { app_ver: release_version}}
+
+
+# remember to manually set eyemetric.eyefr/files/compose/vars.yml to the 
+# correct app_ver denoted here in release version.

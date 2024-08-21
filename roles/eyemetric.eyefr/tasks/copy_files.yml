@@ -1,0 +1,130 @@
+---
+#------------
+# creates the app dir stucture
+#------------
+- name: create app dir directory structure
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ eyemetric_user }}"
+    group: "{{ eyemetric_user }}"
+    recurse: true
+  loop:
+    - "{{ app_dir }}/certs"
+    - "{{ app_dir }}/compose"
+    - "{{ app_dir }}/config"
+    - "{{ app_dir }}/data"
+    - "{{ app_dir }}/scripts"
+    - "{{ app_dir }}/sites"
+    - "{{ app_dir }}/utils"
+    - "{{ app_dir }}/logs"
+
+- name: Copy utility scripts and fr-cli tool and certs
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ eyemetric_user }}"
+    group: "{{ eyemetric_group }}"
+    mode: "0774"
+  loop:
+    - { src: "scripts/", dest: "{{ app_dir }}/scripts/" } # Copy the contents of "scripts" to "{{ app_dir }}/scripts"
+    - { src: "certs/", dest: "{{ app_dir }}/certs/" } # Copy the contents of "scripts" to "{{ app_dir }}/scripts"
+    - { src: "cv-cli", dest: "{{ app_dir }}/utils/fr-cli" } # Copy "cv-cli" to "{{ app_dir }}/utils/fr-cli"
+
+- name: Copy config files to server
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ app_dir }}/config/{{ item.dest }}"
+    owner: "{{ eyemetric_user }}"
+    group: "{{ eyemetric_user }}"
+  loop:
+    - { src: "Caddyfile.j2", dest: "Caddyfile" }
+    - { src: "rtsp-webrtc.json.j2", dest: "rtsp-webrtc.json" }
+  tags:
+    - templ
+
+- name: Copy compose files to server
+  #ansible.builtin.template:
+  copy:
+    src: "files/compose/{{ item.src }}"
+    dest: "{{ app_dir }}/compose/{{ item.dest }}"
+    owner: "{{ eyemetric_user }}"
+    group: "{{ eyemetric_user }}"
+  loop:
+    - { src: "init.sh", dest: "init.sh" }
+    - { src: "shutdown.sh", dest: "shutdown.sh" }
+    - { src: "kill.sh", dest: "kill.sh" }
+    - { src: "paravision-dkup.yml", dest: "paravision-dkup.yml" }
+    - { src: "paravision-dkdown.yml", dest: "paravision-dkdown.yml" }
+    - { src: "paravision-pdup.yml", dest: "paravision-pdup.yml" }
+    - { src: "paravision-pddown.yml", dest: "paravision-pddown.yml" }
+
+    - { src: "safr-dkup.yml", dest: "safr-dkup.yml" }
+    - { src: "safr-dkdown.yml", dest: "safr-dkdown.yml" }
+    - { src: "safr-pdup.yml", dest: "safr-pdup.yml" }
+    - { src: "safr-pddown.yml", dest: "safr-pddown.yml" }
+    - { src: "vars.yml", dest: "vars.yml" }
+  tags:
+    - templ
+    - compose
+
+# overwrite any gpu specific files from previous task
+- name: Copy compose cpu specific files to server
+  ansible.builtin.copy:
+    src: "files/compose/{{ item.src }}"
+    dest: "{{ app_dir }}/compose/{{ item.dest }}"
+    owner: "{{ eyemetric_user }}"
+    group: "{{ eyemetric_user }}"
+  loop:
+    - { src: "paravision-pdup-cpu.yml", dest: "paravision-pdup-cpu.yml" }
+    - { src: "paravision-dkup-cpu.yml", dest: "paravision-dkup-cpu.yml" }
+    - { src: "paravision-pddown-cpu.yml", dest: "paravision-pddown-cpu.yml" }
+    - { src: "paravision-dkdown-cpu.yml", dest: "paravision-dkdown-cpu.yml" }
+
+- name: Set executable permissions on compose shell scripts
+  ansible.builtin.file:
+    path: "{{ app_dir }}/compose/{{ item.dest }}"
+    mode: "0755"
+  loop:
+    - { src: "init.sh", dest: "init.sh" }
+    - { src: "shutdown.sh", dest: "shutdown.sh" }
+    - { src: "kill.sh", dest: "kill.sh" }
+  tags:
+    - templ
+
+# assets useful libs for our sites. used by auth only at the moment.
+- name: copy web assets
+  ansible.builtin.copy:
+    src: ../files/sites/assets
+    dest: "{{app_dir}}/sites"
+    directory_mode: "777"
+    owner: eyemetric # Optional: Specify owner
+    group: eyemetric # Optional: Specify group
+    mode: "777" # Optional: Set permissions
+  become: true # Optional: Use 'become' to become another user, often used for permissions.
+  tags:
+    - web_assets
+
+# this should be temporary
+- name: paravsion multi-gpu workaround code
+  block:
+    - name: Copy a paravision proc fix
+      ansible.builtin.copy:
+        src: ../files/sites/proc_app
+        dest: "{{app_dir}}/sites"
+        directory_mode: "777"
+        owner: eyemetric # Optional: Specify owner
+        group: eyemetric # Optional: Specify group
+        mode: "777" # Optional: Set permissions
+      become: true # Optional: Use 'become' to become another user, often used for permissions.
+
+    - name: Copy  paravision stream fix
+      ansible.builtin.copy:
+        src: ../files/sites/pv_app
+        dest: "{{app_dir}}/sites"
+        directory_mode: "777"
+        owner: eyemetric # Optional: Specify owner
+        group: eyemetric # Optional: Specify group
+        mode: "777" # Optional: Set permissions
+      become: true # Optional: Use 'become' to become another user, often used for permissions.
+  when: "'gpu' in group_names"

@@ -1,0 +1,146 @@
+---
+- name: SAFR Podman Up
+  hosts: localhost
+  connection: local
+  gather_facts: yes
+  tags: up
+  vars_files:
+    - vars.yml
+
+  tasks:
+      
+    - name: create podman network
+      community.docker.docker_network:
+        name: "{{ fr_network }}"
+        driver: bridge
+        state: present
+
+    - name: Ensure caddy_data volume exists
+      community.docker.docker_volume:
+        name: caddy_data
+        state: present
+
+    - name: Ensure caddy_config volume exists
+      community.docker.docker_volume:
+        name: caddy_config
+        state: present
+
+    # should go in a pre-task
+    - name: use podman hub registry to pull some images
+      become: no
+      register: podman_login
+      community.docker.docker_login:
+        username: "{{ docker_login }}"
+        password: "{{ docker_pwd }}"
+        registry: "{{ docker_registry }}"
+            
+    - name: Start frdb Container
+      community.docker.docker_container:
+        name: "{{ frdb }}"
+        image: "{{ safr_images.frdb }}"
+        restart_policy: always
+        env:
+          POSTGRES_USER: "{{ frdb_user }}"
+          POSTGRES_PASSWORD: "{{ frdb_pass }}"
+          POSTGRES_DB: "{{ frdb_name }}"
+          TZ: "{{ tz }}"
+        ports:
+          - "{{ frdb_port }}:5432"
+        volumes:
+          - "{{frdb_data_vol}}:/var/lib/postgresql/data:Z"
+        network: "{{ fr_network }}"
+
+    - name: Start fr-api Container
+      community.docker.docker_container:
+        name: "{{ fr-api }}"
+        image: "{{ safr_images.fr_api }}"
+        restart_policy: always
+        env:
+          SAFR_DB_ADDR: "{{ host_ip }}"
+          SAFR_DB_PORT: "{{ frdb_port }}"
+          FR_BACKEND: "{{ fr_backend }}"  # pv | cv  paravision or clearview
+          CV_URL: "{{ cv_url }}"
+          PV_IDENT_URL: "{{ pv_ident_url }}"
+          PV_PROC_URL: "{{ pv_proc_url }}"
+          MIN_MATCH: "{{ fr_api_min_match }}"
+          MATCH_EXPIRES: "{{ fr_api_match_expires }}"
+          MIN_QUALITY: "{{ fr_api_min_quality }}"
+          MIN_DUPE_MATCH: "{{ fr_api_min_dupe_match }}"
+          TPASS_USER: "{{ tpass_user }}"
+          TPASS_PWD: "{{ tpass_pwd }}"
+          TPASS_ADDR: "{{ tpass_addr }}"
+          RUST_LOG: "{{ fr_api_log_level }}"
+          USE_TLS: "false"
+          TZ: "{{ tz }}"
+        ports:
+          - "{{ fr_api_port }}:3000"
+        network: "{{ fr_network }}"
+
+    - name: Start cam-server Container
+      community.docker.docker_container:
+        name: "{{ cam-server }}"
+        image: "{{ safr_images.cam_server }}"
+        restart_policy: always
+        env:
+          FR_DB: "{{ host_ip }}"
+          FR_DB_PORT: "{{ frdb_port }}"
+          FR_DB_USER: "{{ frdb_user }}"
+          FR_DB_PWD: "{{ frdb_pass }}"
+          FR_API: "{{ fr_api_url }}"
+          CAM_SRV_MIN_MATCH: "{{ cam_srv_min_match }}"
+          CAM_SRV_MATCH_EXPIRES: "{{ cam_srv_match_expires }}"
+          CAM_SRV_MIN_QUALITY: "{{ cam_srv_min_quality }}"
+          CAM_SRV_MIN_DUPE_MATCH: "{{ cam_srv_min_dupe_match }}"
+          CAM_SRV_LOG_DETECTIONS: "{{ cam_srv_log_detections }}"
+          CAM_SRV_RETAIN_DETECTION_IMAGES: "{{ cam_srv_retain_detection_images }}"
+          PV_ALERTS_URL: "{{ pv_alerts_ws }}"
+          PV_DETECTION_URL: "{{ pv_detection_ws }}"
+          PV_STREAM_URL: "{{ pv_stream_url }}"
+          RTSP_API_URL: "{{ rtsp_api_url }}"
+          RTSP_CAM_PROXY_URL: "{{ rtsp_cam_proxy_url }}"
+        ports:
+          - "{{ cam_srv_port }}:3000"
+        network: "{{ fr_network }}"
+
+    - name: Start facade Container
+      community.docker.docker_container:
+        name: "{{ facade }}"
+        image: "{{ safr_images.facade }}"
+        restart_policy: always
+        ports:
+          - "{{ facade_port }}:80"
+          - "{{ facade_ssl_port }}:443"
+          - "{{ facade_ssl_port }}:443/udp"
+        env:
+          HOST_IP: "{{ host_ip }}"
+        volumes:
+          - "{{ caddy_file  }}:/etc/caddy/Caddyfile:Z"
+          - "{{ caddy_certs }}:/data/caddy/pki/authorities/local:Z"
+          - "{{ caddy_cam_app }}:/srv/bolo:Z"
+          - "{{ caddy_fr_analyze_app }}:/srv/analyze:Z"
+          - caddy_data:/data
+          - caddy_config:/config
+        network_mode: host
+
+    - name: Start rtsp-web container
+      community.docker.docker_container:
+        name: "{{ rtsp-webrtc }}"
+        image: "{{ safr_images.rtsp_webrtc }}"
+        restart_policy: always
+        ports:
+          - "{{ webrtc_port }}:8083"
+        volumes:
+          - "{{ webrtc_vol }}:/config/config.json:Z"
+        network_mode: host
+
+    - name: Start auth Container
+      community.docker.docker_container:
+        name: "{{ auth }}"
+        image: "{{ safr_images.auth }}"
+        restart_policy: always
+        ports:
+          - "{{ auth_port }}:3001"
+        volumes:
+          - "{{ auth_vol }}:/root/assets:Z
+        network: "{{ fr_network }}"
+

@@ -1,0 +1,120 @@
+---
+- name: Paravision Podman Up
+  hosts: localhost
+  connection: local
+  gather_facts: yes
+  tags: up
+  vars_files:
+    - vars.yml
+
+  tasks:
+    - name: create podman network
+      containers.podman.podman_network:
+        name: "{{ fr_network }}"
+        driver: bridge
+        state: present
+
+    - name: use paravisions custom registry to pull pv images
+      become: no
+      register: pv_login
+      containers.podman.podman_login:
+        username: "{{ pv_login }}"
+        password: "{{ pv_pwd }}"
+        registry: "{{ pv_registry }}"
+
+    - name: use podman hub registry to pull some images
+      become: no
+      register: docker_login
+      containers.podman.podman_login:
+        username: "{{ docker_login }}"
+        password: "{{ docker_pwd }}"
+        registry: "{{ docker_registry }}"
+
+    - name: podman pull CPU based paravision containers
+      register: docker_pull
+      containers.podman.podman_image:
+        name: "{{ item.value }}"
+        state: present
+      loop: "{{ pv_cpu_images | dict2items }}"
+
+    - name: start pvdb
+      become: no
+      containers.podman.podman_container:
+        name: "{{ pvdb_cpu }}"
+        image: "{{ pv_cpu_images.pvdb }}"
+        restart_policy: always
+        network: "{{ fr_network }}"
+        state: started
+        env:
+          POSTGRES_USER: "{{pvdb_db_user}}"
+          POSTGRES_PASSWORD: "{{pvdb_db_pwd}}"
+          POSTGRES_DB: "{{pvdb_db_name}}"
+          TZ: "EST"
+        publish:
+          - "{{ pv_db_port }}:5432"
+        volume:
+          - "{{pvdb_pv_data_vol}}:Z"
+
+    - name: start identity service  
+      containers.podman.podman_container:
+        name: "{{ ident_cpu }}"
+        image: "{{ pv_cpu_images.identity }}"
+        restart_policy: always
+        network: "{{ fr_network }}"
+        state: started
+        env:
+          POSTGRES_URI:  "postgresql://admin:admin@{{host_ip}}:{{ pv_db_port }}/{{ pvdb_db_name }}?sslmode=disable"
+          HTTP_PROXY: "{{ident_http_proxy}}"
+          TZ: "EST"
+        publish:
+          - "5656:5656"
+          - "{{ pv_ident_port }}:8080"
+
+    - name: Run processor service 
+      become: no
+      containers.podman.podman_container:
+        name: "{{ proc_cpu }}"
+        image: "{{ pv_cpu_images.processor }}"
+        restart_policy: always
+        network: "{{ fr_network }}"
+        state: started
+        security_opt:
+          - "label:disable"
+        env:
+          PV_HTTP_INTERFACE: "{{processor_pv_http_interface}}"
+          PV_INFERENCE_WORKERS: "{{processor_pv_inference_workers}}"
+        volumes:
+          - "{{ proc_vol }}:/app:Z"
+        publish:
+           - "50051:50051"
+           - "{{ pv_prov_port }}:8081"
+      register: proc_container
+
+    - name: Run streaming container
+      become: no
+      containers.podman.podman_container:
+        name: "{{ pvstrm_cpu }}"
+        image: "{{ pv_cpu_images.streaming }}"
+        restart_policy: always
+        network: "{{ fr_network }}"
+        state: started
+        security_opt:
+          - "label:disable"
+        env:
+          TZ: "EST"
+          PV_INFERENCE_WORKERS: "{{stream_pv_inference_workers}}"
+          PV_POSTPROCESSOR_WORKERS: "{{stream_pv_postprocessor_workers}}"
+          PV_OUTPUT_FACES_ONLY: "{{stream_pv_output_faces_only}}"
+          PV_FACE_QUALITY_TRACKING: "{{stream_pv_face_quality_tracking}}"
+        publish:
+            - "{{ pv_stream_port }}:5000"
+            - "{{ pv_detect_port }}:5050"
+            - "{{ pv_alerts_port }}:5051"
+        volumes:
+          - "{{ pvstrm_vol }}:/home/streaming/app:Z"
+        tmpfs:
+          "/dev/shm": "size=6g"
+      register: strm_container
+
+    - debug:
+        var: strm_container

@@ -1,0 +1,29 @@
+---
+- name: Paravision Docker Down
+  hosts: localhost
+  tasks:
+    - name: Stop and remove pvdb container
+      community.docker.docker_container:
+        name: "{{ pvdb_gpu }}"
+        state: absent
+      tags:
+        - pvdb
+    - name: Stop and remove ident v4 container
+      community.docker.docker_container:
+        name: "{{ ident_gpu }}"
+        state: absent
+      tags:
+        - ident
+
+    - name: Stop and remove ident proc v6 container
+      community.docker.docker_container:
+        name: "{{ proc_gpu }}"
+        state: absent
+      tags: 
+        - proc
+    - name: Stop and remove ident pvstrm container
+      community.docker.docker_container:
+        name: "{{ pvstrm_gpu }}" 
+        state: absent
+      tags: 
+        - stream

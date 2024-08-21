@@ -1,0 +1,115 @@
+---
+- name: Check if the data directory is empty
+  ansible.builtin.find:
+    paths: "{{ app_dir }}/data"
+    file_type: any
+  register: data_dir_contents
+
+- name: Check if the sites directory is empty
+  ansible.builtin.find:
+    paths: "{{ app_dir }}/sites"
+    file_type: any
+  register: sites_dir_contents
+
+- name: setup pre made data volumes as starting point
+  become: false
+  register: data_container
+  shell: "podman run -d --rm --name assets {{ safr_images.assets }}"
+# if we run into a situation where data exists (it shouldn't since this is install not update)
+# NOTE: This is all a bit of a defensive hack. We should really be doing data migrations.
+# this is just a precaution in the case where we run ansible and there's existing data. destroying that would be bad.
+- name: Prepare Data volumes
+  block:
+    - name: backup existing data volumes to /tmp
+      become: false
+      community.general.archive:
+        path: "{{ app_dir }}/data"
+        # dest: "/tmp/data_vol.bk.tgz"
+        dest: "/tmp/data_vol.bk.tar.gz.{{app_ver}}.{{ lookup('pipe', 'date +%Y%m%d%H%M%S') }}"
+        owner: "{{ eyemetric_user }}"
+        group: "{{ eyemetric_group }}"
+        mode: "0774"
+      when: data_dir_contents.matched > 0
+
+- name: prepare sites
+  block:
+    - name: backup existing sites to /tmp
+      become: false
+      community.general.archive:
+        path: "{{ app_dir }}/sites"
+        dest: "/tmp/sites.bk.tar.gz.{{app_ver}}.{{ lookup('pipe', 'date +%Y%m%d%H%M%S') }}"
+        owner: "{{ eyemetric_user }}"
+        group: "{{ eyemetric_group }}"
+        mode: "0774"
+      when: sites_dir_contents.matched > 0
+
+    - name: Find Sites files and subdirectories
+      ansible.builtin.find:
+        paths: "{{app_dir}}/sites"
+        file_type: any
+        hidden: yes # Set to 'yes' if you also want to delete hidden files and subdirectories
+      register: files_to_delete
+      when: sites_dir_contents.matched > 0
+
+    - name: Delete all files and subdirectories
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{ files_to_delete.files }}"
+      when: sites_dir_contents.matched > 0
+
+    - name: copy sites from assets to tmp dir
+      become: false
+      register: data_copy
+      shell: |
+        {{ oci_cmd  }} cp assets:/cam-app {{app_dir}}/sites
+        {{ oci_cmd  }} cp assets:/fr-analyze {{app_dir}}/sites
+      when: sites_dir_contents.matched > 0
+
+    - debug:
+        var: sites_copy
+    - debug:
+        var: sites_container
+
+- name: init data volumes
+  block:
+    - name: copy data volumes from assets to tmp dir
+      become: no
+      register: data_copy
+      shell: |
+        {{ oci_cmd  }} cp assets:/safr_pgdata.tar.gz /tmp
+        {{ oci_cmd  }} cp assets:/pvdb_pgdata.tar.gz /tmp
+    - debug:
+        var: data_copy
+    - debug:
+        var: data_container
+
+    - name: create data dir if not exists
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ eyemetric_user }}"
+        group: "{{ eyemetric_user }}"
+        recurse: true
+      loop:
+        - "{{ app_dir }}/data"
+
+    - name: Extract data volume archives to volume location
+      unarchive:
+        src: "{{ item }}"
+        dest: "{{ app_dir }}/data"
+        remote_src: yes
+        owner: "{{ eyemetric_user }}"
+        group: "{{ eyemetric_group }}"
+        mode: "0774"
+      loop:
+        - /tmp/safr_pgdata.tar.gz
+        - /tmp/pvdb_pgdata.tar.gz
+
+  when: data_dir_contents.matched == 0
+
+- name: Stop podman assets container
+  become: no
+  containers.podman.podman_container:
+    name: assets
+    state: stopped

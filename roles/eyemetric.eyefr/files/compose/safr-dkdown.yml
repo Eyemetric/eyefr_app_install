@@ -1,0 +1,35 @@
+---
+- name: SAFR Podman Down
+  hosts: localhost
+  vars_files:
+    - vars.yml
+  tasks:
+    - name: Stop and remove frdb container
+      community.docker.docker_container:
+        name: "{{ frdb }}"
+        state: absent
+
+    - name: Stop and remove fr-api container
+      community.docker.docker_container:
+        name: "{{ fr-api }}"
+        state: absent
+
+    - name: Stop and remove cam-server container
+      community.docker.docker_container:
+        name: "{{ cam-server }}"
+        state: absent
+
+    - name: Stop and remove facade container
+      community.docker.docker_container:
+        name: "{{ facade }}"
+        state: absent
+
+    - name: Stop and remove rtsp-webrtc container
+      community.docker.docker_container:
+        name: "{{ rtsp-webrtc }}"
+        state: absent
+
+    - name: Stop and remove auth container
+      community.docker.docker_container:
+        name: "{{ auth }}"
+        state: absent

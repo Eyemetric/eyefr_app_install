@@ -1,0 +1,29 @@
+---
+- name: use paravisions custom registry to podman pull pv images
+  become: false
+  register: pv_login
+  containers.podman.podman_login:
+    username: "{{ pv_login }}"
+    password: "{{ pv_pwd }}"
+    registry: "{{ pv_registry }}"
+
+- name: podman pull GPU based paravision containers
+  become: false
+  register: podman_pull
+  containers.podman.podman_image:
+    name: "{{ item.value }}"
+    state: present
+  loop: "{{ gpu_images | dict2items }}"
+  when: "'gpu' in group_names"
+
+- debug:
+    var: podman_pull
+
+- name: podman pull CPU based paravision images
+  become: false
+  register: podman_pull
+  containers.podman.podman_image:
+    name: "{{ item.value }}"
+    state: present
+  loop: "{{ cpu_images | dict2items }}"
+  when: "'cpu' in group_names"

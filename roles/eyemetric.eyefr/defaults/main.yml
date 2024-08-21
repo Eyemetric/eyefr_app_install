@@ -1,0 +1,11 @@
+---
+# vars file for safr
+safr_images:
+  fr_api: "docker.io/eyemetricfr/fr-api:{{ app_ver }}"
+  frdb: "docker.io/postgres:14.1"
+  identity: "docker.io/eyemetricfr/identity:v4.0.0"
+  cam_server: "docker.io/eyemetricfr/cam-server:{{ app_ver }}"
+  rtsp_webrtc: "docker.io/eyemetricfr/rtsp-webrtc:{{ app_ver }}"
+  facade: "docker.io/eyemetricfr/facade:{{ app_ver }}"
+  assets: "docker.io/eyemetricfr/assets:{{ app_ver }}"
+  auth: "docker.io/eyemetricfr/auth:{{ app_ver }}"

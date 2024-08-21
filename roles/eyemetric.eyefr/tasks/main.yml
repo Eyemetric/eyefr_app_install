@@ -1,0 +1,66 @@
+---
+# tasks file for safr-v1_5
+- name: Set container manager
+  set_fact:
+    oci_cmd: "{{ 'docker' if ansible_distribution == 'Ubuntu' else 'podman' }}"
+
+#--------------------------
+# GET the images with PODMAN
+#--------------------------
+- name: use podman login so we ca pull our images
+  become: false
+  register: podman_login
+  containers.podman.podman_login:
+    username: "{{ docker_login }}"
+    password: "{{ docker_pwd }}"
+    registry: docker.io
+
+- name: pull SAFR containers from docker.io
+  become: false
+  register: docker_pull
+  containers.podman.podman_image:
+    name: "{{ item.value }}"
+  loop: "{{ safr_images | dict2items }}"
+
+- name: install tools an utilities
+  include_tasks: install_tools.yml
+
+- name: set up db data and copy static sites
+  include_tasks: install_assets.yml
+
+- name: create app structure and copy config files
+  include_tasks: copy_files.yml
+
+#----------------------------------
+# Allow docker get the port access
+# Is this just for RHEL?
+
+#----------------------------------
+- name: Set unpriviledged port access to start at 80
+  lineinfile:
+    path: /etc/sysctl.conf
+    insertafter: EOF
+    line: net.ipv4.ip_unprivileged_port_start=80
+- name: Create the frnetwork
+  become: false
+  containers.podman.podman_network:
+    name: fr_network
+
+# - name: Set CONTAINER_ENGINE environment variable in /etc/environment
+#  lineinfile:
+#    path: /etc/environment
+#    regexp: "^CONTAINER_ENGINE="
+#    line: "CONTAINER_ENGINE={{oci_cmd}}"
+#    state: present
+#  become: true
+
+- name: ensure non-root user can start services (linger)
+  include_tasks: systemd_user_tasks.yml
+
+- name: Ensure cron job for running init.sh at reboot
+  ansible.builtin.cron:
+    name: "Run fr init.sh at reboot for eyemetric"
+    special_time: "reboot"
+    job: "{{ app_dir }}/compose/init.sh > {{ app_dir }}/logs/logs.log 2>&1"
+    user: "{{ eyemetric_user }}" # Replace non_root_user with the actual username
+    state: present
