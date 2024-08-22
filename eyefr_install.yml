@@ -5,9 +5,10 @@
   vars:
     ansible_become_pass: "{{ host_sudo_pass[inventory_hostname] | default(default_sudo_pass) }}"
     release_version: "1.6.2" 
+    overwrite_data_vol: false
   roles:
     - { role: paravision.v6, tags: ["paravision"] }
-    - { role: eyemetric.eyefr, tags: ["eyefr"], vars: { app_ver: "{{ release_version }}"  }}
+    - { role: eyemetric.eyefr, tags: ["eyefr", "assets"], vars: { app_ver: "{{ release_version }}" }}
 
 
 # remember to manually set eyemetric.eyefr/files/compose/vars.yml to the 

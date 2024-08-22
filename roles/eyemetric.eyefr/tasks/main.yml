@@ -25,12 +25,14 @@
 - name: install tools an utilities
   include_tasks: install_tools.yml
 
-- name: set up db data and copy static sites
-  include_tasks: install_assets.yml
-  
 
 - name: create app structure and copy config files
   include_tasks: copy_files.yml
+
+- name: set up db data and copy static sites
+  include_tasks: install_assets.yml
+  tags: 
+    - assets
 
 #----------------------------------
 # Allow docker get the port access
