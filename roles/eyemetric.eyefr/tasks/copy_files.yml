@@ -52,17 +52,11 @@
     group: "{{ eyemetric_user }}"
   loop:
     - { src: "init.sh", dest: "init.sh" }
-    - { src: "shutdown.sh", dest: "shutdown.sh" }
     - { src: "kill.sh", dest: "kill.sh" }
     - { src: "paravision-dkup.yml", dest: "paravision-dkup.yml" }
-    - { src: "paravision-dkdown.yml", dest: "paravision-dkdown.yml" }
     - { src: "paravision-pdup.yml", dest: "paravision-pdup.yml" }
-    - { src: "paravision-pddown.yml", dest: "paravision-pddown.yml" }
-
     - { src: "safr-dkup.yml", dest: "safr-dkup.yml" }
-    - { src: "safr-dkdown.yml", dest: "safr-dkdown.yml" }
     - { src: "safr-pdup.yml", dest: "safr-pdup.yml" }
-    - { src: "safr-pddown.yml", dest: "safr-pddown.yml" }
     - { src: "vars.yml", dest: "vars.yml" }
   tags:
     - templ
@@ -78,8 +72,6 @@
   loop:
     - { src: "paravision-pdup-cpu.yml", dest: "paravision-pdup-cpu.yml" }
     - { src: "paravision-dkup-cpu.yml", dest: "paravision-dkup-cpu.yml" }
-    - { src: "paravision-pddown-cpu.yml", dest: "paravision-pddown-cpu.yml" }
-    - { src: "paravision-dkdown-cpu.yml", dest: "paravision-dkdown-cpu.yml" }
 
 - name: Set executable permissions on compose shell scripts
   ansible.builtin.file:
@@ -87,7 +79,6 @@
     mode: "0755"
   loop:
     - { src: "init.sh", dest: "init.sh" }
-    - { src: "shutdown.sh", dest: "shutdown.sh" }
     - { src: "kill.sh", dest: "kill.sh" }
   tags:
     - templ

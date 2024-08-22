@@ -7,7 +7,7 @@
     release_version: "1.6.2" 
   roles:
     - { role: paravision.v6, tags: ["paravision"] }
-    - { role: eyemetric.eyefr, tags: ["eyefr"], vars: { app_ver: release_version}}
+    - { role: eyemetric.eyefr, tags: ["eyefr"], vars: { app_ver: "{{ release_version }}"  }}
 
 
 # remember to manually set eyemetric.eyefr/files/compose/vars.yml to the 

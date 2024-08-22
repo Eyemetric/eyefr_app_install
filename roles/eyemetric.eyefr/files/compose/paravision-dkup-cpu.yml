@@ -84,7 +84,7 @@
           - "{{ proc_vol }}:/app:Z"
         publish:
            - "50051:50051"
-           - "{{ pv_prov_port }}:8081"
+           - "{{ pv_proc_port }}:8081"
       register: proc_container
 
     - name: Run streaming container

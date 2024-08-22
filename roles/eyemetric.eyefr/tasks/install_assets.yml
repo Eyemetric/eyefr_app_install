@@ -3,7 +3,15 @@
   ansible.builtin.find:
     paths: "{{ app_dir }}/data"
     file_type: any
+    tags:
+      - data_copy
   register: data_dir_contents
+
+- debug:
+    var: data_dir_contents
+    msg: "hello data dir"
+    tags:
+      - data_copy
 
 - name: Check if the sites directory is empty
   ansible.builtin.find:
@@ -66,12 +74,8 @@
         {{ oci_cmd  }} cp assets:/fr-analyze {{app_dir}}/sites
       when: sites_dir_contents.matched > 0
 
-    - debug:
-        var: sites_copy
-    - debug:
-        var: sites_container
-
 - name: init data volumes
+  when: data_dir_contents.matched == 0
   block:
     - name: copy data volumes from assets to tmp dir
       become: no
@@ -105,8 +109,6 @@
       loop:
         - /tmp/safr_pgdata.tar.gz
         - /tmp/pvdb_pgdata.tar.gz
-
-  when: data_dir_contents.matched == 0
 
 - name: Stop podman assets container
   become: no

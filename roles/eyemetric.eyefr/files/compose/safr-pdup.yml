@@ -50,9 +50,9 @@
           - "{{frdb_data_vol}}:/var/lib/postgresql/data:Z"
         network: "{{ fr_network }}"
 
-    - name: Start fr-api Container
+    - name: Start fr api Container
       containers.podman.podman_container:
-        name: "{{ fr-api }}"
+        name: "{{ fr_api }}"
         image: "{{ safr_images.fr_api }}"
         restart_policy: always
         env:
@@ -78,7 +78,7 @@
 
     - name: Start cam-server Container
       containers.podman.podman_container:
-        name: "{{ cam-server }}"
+        name: "{{ cam_server }}"
         image: "{{ safr_images.cam_server }}"
         restart_policy: always
         env:
@@ -124,7 +124,7 @@
 
     - name: Start rtsp-web container
       containers.podman.podman_container:
-        name: "{{ rtsp-webrtc }}"
+        name: "{{ rtsp_webrtc }}"
         image: "{{ safr_images.rtsp_webrtc }}"
         restart_policy: always
         ports:
@@ -141,6 +141,6 @@
         ports:
           - "{{ auth_port }}:3001"
         volumes:
-          - "{{ auth_vol }}:/root/assets:Z
+          - "{{ auth_vol }}:/root/assets:Z"
         network: "{{ fr_network }}"
 

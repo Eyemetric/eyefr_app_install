@@ -27,6 +27,7 @@
 
 - name: set up db data and copy static sites
   include_tasks: install_assets.yml
+  
 
 - name: create app structure and copy config files
   include_tasks: copy_files.yml
@@ -41,18 +42,10 @@
     path: /etc/sysctl.conf
     insertafter: EOF
     line: net.ipv4.ip_unprivileged_port_start=80
-- name: Create the frnetwork
-  become: false
-  containers.podman.podman_network:
-    name: fr_network
 
-# - name: Set CONTAINER_ENGINE environment variable in /etc/environment
-#  lineinfile:
-#    path: /etc/environment
-#    regexp: "^CONTAINER_ENGINE="
-#    line: "CONTAINER_ENGINE={{oci_cmd}}"
-#    state: present
-#  become: true
+- name: reload sysctl.conf
+  command: sysctl -p
+
 
 - name: ensure non-root user can start services (linger)
   include_tasks: systemd_user_tasks.yml

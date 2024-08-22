@@ -11,12 +11,12 @@
 
     - name: Stop and remove fr-api container
       containers.podman.podman_container:
-        name: "{{ fr-api }}"
+        name: "{{ fr_api }}"
         state: absent
 
     - name: Stop and remove cam-server container
       containers.podman.podman_container:
-        name: "{{ cam-server }}"
+        name: "{{ cam_server }}"
         state: absent
 
     - name: Stop and remove facade container
@@ -26,7 +26,7 @@
 
     - name: Stop and remove rtsp-webrtc container
       containers.podman.podman_container:
-        name: "{{ rtsp-webrtc }}"
+        name: "{{ rtsp_webrtc }}"
         state: absent
 
     - name: Stop and remove auth container

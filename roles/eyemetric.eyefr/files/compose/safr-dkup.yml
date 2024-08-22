@@ -141,6 +141,6 @@
         ports:
           - "{{ auth_port }}:3001"
         volumes:
-          - "{{ auth_vol }}:/root/assets:Z
+          - "{{ auth_vol }}:/root/assets:Z"
         network: "{{ fr_network }}"
 
