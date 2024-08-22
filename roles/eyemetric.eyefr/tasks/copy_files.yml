@@ -95,27 +95,3 @@
   become: true # Optional: Use 'become' to become another user, often used for permissions.
   tags:
     - web_assets
-
-# this should be temporary
-- name: paravsion multi-gpu workaround code
-  block:
-    - name: Copy a paravision proc fix
-      ansible.builtin.copy:
-        src: ../files/sites/proc_app
-        dest: "{{app_dir}}/sites"
-        directory_mode: "777"
-        owner: eyemetric # Optional: Specify owner
-        group: eyemetric # Optional: Specify group
-        mode: "777" # Optional: Set permissions
-      become: true # Optional: Use 'become' to become another user, often used for permissions.
-
-    - name: Copy  paravision stream fix
-      ansible.builtin.copy:
-        src: ../files/sites/pv_app
-        dest: "{{app_dir}}/sites"
-        directory_mode: "777"
-        owner: eyemetric # Optional: Specify owner
-        group: eyemetric # Optional: Specify group
-        mode: "777" # Optional: Set permissions
-      become: true # Optional: Use 'become' to become another user, often used for permissions.
-  when: "'gpu' in group_names"

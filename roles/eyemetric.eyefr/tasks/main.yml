@@ -31,9 +31,9 @@
 
 - name: set up db data and copy static sites
   include_tasks: install_assets.yml
-  tags: 
-    - assets
 
+- name: apply paravision multi gpu workaround
+  include_tasks: pv_multi_gpu_fix.yml
 #----------------------------------
 # Allow docker get the port access
 # Is this just for RHEL?
