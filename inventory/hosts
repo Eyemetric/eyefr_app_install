@@ -1,13 +1,13 @@
 [all]
-#dev-home ansible_host=192.168.0.28
-dev-home ansible_host=174.51.11.19
+dev-home ansible_host=192.168.0.28
+#dev-home ansible_host=174.51.11.19
 
 
 [gpu]
-#dev-home ansible_host=192.168.0.28
+dev-home ansible_host=192.168.0.28
 #dev-home ansible_host=174.51.11.19
 
 [cpu]
-dev-home ansible_host=174.51.11.19
+#dev-home ansible_host=174.51.11.19
 
 [all:vars]

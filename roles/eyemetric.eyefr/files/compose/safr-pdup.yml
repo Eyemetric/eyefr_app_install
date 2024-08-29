@@ -8,7 +8,8 @@
     - vars.yml
 
   tasks:
-      
+
+
     - name: create podman network
       containers.podman.podman_network:
         name: "{{ fr_network }}"
@@ -33,7 +34,7 @@
         username: "{{ docker_login }}"
         password: "{{ docker_pwd }}"
         registry: "{{ docker_registry }}"
-            
+
     - name: Start frdb Container
       containers.podman.podman_container:
         name: "{{ frdb }}"
@@ -138,9 +139,9 @@
         name: "{{ auth }}"
         image: "{{ safr_images.auth }}"
         restart_policy: always
+        state: stopped
         ports:
           - "{{ auth_port }}:3001"
-        volumes:
-          - "{{ auth_vol }}:/root/assets:Z"
+            #volumes:
+            #- "{{ auth_vol }}:/root/assets:Z"
         network: "{{ fr_network }}"
-

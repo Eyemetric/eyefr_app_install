@@ -55,7 +55,7 @@
         volume:
           - "{{pvdb_pv_data_vol}}:Z"
 
-    - name: start identity service  
+    - name: start identity service
       containers.podman.podman_container:
         name: "{{ ident_gpu }}"
         image: "{{ pv_gpu_images.identity }}"
@@ -70,7 +70,7 @@
           - "5656:5656"
           - "{{ pv_ident_port }}:8080"
 
-    - name: Run processor service 
+    - name: Run processor service
       become: no
       containers.podman.podman_container:
         name: "{{ proc_gpu }}"
@@ -117,11 +117,8 @@
             - "{{ pv_stream_port }}:5000"
             - "{{ pv_detect_port }}:5050"
             - "{{ pv_alerts_port }}:5051"
-        volumes:
-          - "{{ pvstrm_vol }}:/home/streaming/app:Z"
+              #volumes:
+              #- "{{ pvstrm_vol }}:/home/streaming/app:Z"
         tmpfs:
           "/dev/shm": "size=6g"
       register: strm_container
-
-    - debug:
-        var: strm_container

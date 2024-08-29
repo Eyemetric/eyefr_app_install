@@ -1,0 +1,48 @@
+---
+- name: "create user dir for eyemetric.service unit"
+  file:
+    path: "/home/{{ eyemetric_user }}/.config/systemd/user"
+    state: directory
+    owner: "{{ eyemetric_user }}"
+    group: "{{ eyemetric_group }}"
+    mode: "0755"
+
+- name: create the .ansible/tmp dir with permissions
+  file:
+    path: "/home/{{ eyemetric_user }}/.ansible/tmp"
+    state: directory
+    owner: "{{ eyemetric_user }}"
+    group: "{{ eyemetric_group }}"
+    mode: "0777"
+
+- name: Create systemd eyefr service file
+  template:
+    src: eyefr-services.service.j2
+    dest: "/home/{{ eyemetric_user }}/.config/systemd/user/eyefr-services.service"
+    mode: "0644"
+  become_user: "{{ eyemetric_user }}"
+
+- name: Ensure the Podman start script is executable
+  file:
+    path: "{{ app_dir }}/compose/init.sh"
+    mode: "0755"
+  become: true
+  become_user: "{{ eyemetric_user }}"
+
+- name: Enable linger for "{{ eyemetric_user }}" user
+  ansible.builtin.command: "loginctl enable-linger {{ eyemetric_user }}"
+
+- name: Reload user systemd daemon
+  systemd:
+    daemon_reload: yes
+    scope: user
+  become: true
+  become_user: "{{ eyemetric_user }}"
+#- name: Enable and start the EyeFR services
+#  systemd:
+#    name: eyefr-services
+#    enabled: true
+#    state: stopped
+#    scope: user
+#  become: true
+#  become_user: "{{ eyemetric_user }}"

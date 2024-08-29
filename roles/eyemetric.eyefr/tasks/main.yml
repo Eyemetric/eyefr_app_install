@@ -50,7 +50,8 @@
 
 
 - name: ensure non-root user can start services (linger)
-  include_tasks: systemd_user_tasks.yml
+  include_tasks: systemd_setup.yml
+ # include_tasks: systemd_user_tasks.yml
 
 - name: Ensure cron job for running init.sh at reboot
   ansible.builtin.cron:
