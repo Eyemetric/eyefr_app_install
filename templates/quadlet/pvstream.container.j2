@@ -1,0 +1,47 @@
+[Unit]
+Description=Paravision Streaming Container {{ app_ver }}
+After=network-online.target multi-user.target
+Wants=network-online.target
+
+[Container]
+Image={{pv_images.streaming}}
+ContainerName=pvstream_{{arch}}_{{ app_ver }}
+{% if arch == 'gpu' %}
+AddDevice=nvidia.com/gpu=all
+SecurityLabelDisable=true
+Environment=NVIDIA_VISIBLE_DEVICES=nvidia.com/gpu=all
+Environment=NVIDIA_DRIVER_CAPABILITIES=all
+{% endif %}
+
+# Environment variables
+Environment=TZ={{ tz }}
+Environment=PV_INFERENCE_WORKERS={{ stream_pv_inference_workers }} 
+Environment=PV_POSTPROCESSOR_WORKERS={{ stream_pv_postprocessor_workers }}
+Environment=PV_OUTPUT_FACES_ONLY={{ stream_pv_output_faces_only }}
+Environment=PV_FACE_QUALITY_TRACKING={{ stream_pv_face_quality_tracking }} 
+
+# Port publishing
+#stream
+PublishPort={{ pv_stream_port }}:5000
+#detect
+PublishPort={{ pv_detect_port }}:5050
+#alerts
+PublishPort={{pv_alerts_port }}:5051 
+
+# Tmpfs mount
+Tmpfs=/dev/shm:size=6g
+
+# Uncomment and adjust the following line if you want to use the volume mount
+# Volume={{pvstrm_vol}}:/home/streaming/app:Z
+
+[Service]
+Restart=always
+RestartSec=10
+TimeoutStartSec=300
+
+{% if arch == 'gpu' %}
+ExecStartPre=/bin/sh -c 'nvidia-smi > /dev/null 2>&1 || (echo "NVIDIA GPU not ready" && exit 1)'
+{% endif %}
+
+[Install]
+WantedBy=default.target

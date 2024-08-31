@@ -1,8 +1,8 @@
 ---
-# tasks file for safr-v1_5
+
 - name: Set container manager
   set_fact:
-    oci_cmd: "{{ 'docker' if ansible_distribution == 'Ubuntu' else 'podman' }}"
+    oci_cmd: "podman"
 
 #--------------------------
 # GET the images with PODMAN
@@ -34,11 +34,8 @@
 
 - name: apply paravision multi gpu workaround
   include_tasks: pv_multi_gpu_fix.yml
-#----------------------------------
-# Allow docker get the port access
-# Is this just for RHEL?
 
-#----------------------------------
+
 - name: Set unpriviledged port access to start at 80
   lineinfile:
     path: /etc/sysctl.conf
@@ -52,11 +49,3 @@
 - name: ensure non-root user can start services (linger)
   include_tasks: systemd_setup.yml
  # include_tasks: systemd_user_tasks.yml
-
-- name: Ensure cron job for running init.sh at reboot
-  ansible.builtin.cron:
-    name: "Run fr init.sh at reboot for eyemetric"
-    special_time: "reboot"
-    job: "{{ app_dir }}/compose/init.sh > {{ app_dir }}/logs/logs.log 2>&1"
-    user: "{{ eyemetric_user }}" # Replace non_root_user with the actual username
-    state: present

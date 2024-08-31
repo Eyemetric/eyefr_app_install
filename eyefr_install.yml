@@ -10,6 +10,13 @@
     - { role: paravision.v6, tags: ["paravision"] }
     - { role: eyemetric.eyefr, tags: ["eyefr", "assets"], vars: { app_ver: "{{ release_version }}" }}
 
-
+  tasks:
+    - name: Include quadlet tasks
+      include_tasks: tasks/quadlet_config.yml
+      vars: 
+        arch: "{{ 'gpu' if 'gpu' in group_names else 'cpu' }}"
+        pv_images: "{{ pv_gpu_images if 'gpu' in group_names else pv_cpu_images }}"
+      tags: 
+        - quadlet 
 # remember to manually set eyemetric.eyefr/files/compose/vars.yml to the 
 # correct app_ver denoted here in release version.

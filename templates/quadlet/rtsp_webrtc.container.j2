@@ -1,0 +1,20 @@
+[Unit]
+Description=EyeFR RTSP WebRTC Transcoding Container {{ app_ver }}
+After=network-online.target multi-user.target
+Wants=network-online.target
+
+[Container]
+Image={{ safr_images.rtsp_webrtc }}
+ContainerName=rtsp_webrtc_{{ arch }}_{{ app_ver }}
+
+PublishPort={{ webrtc_port }}:8083
+
+Volume={{ webrtc_vol }}:Z
+
+Network=host
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

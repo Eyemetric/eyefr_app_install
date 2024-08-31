@@ -1,0 +1,19 @@
+[Unit]
+Description=Auth for App / Api Authenticaton Container {{ app_ver }}
+After=network-online.target multi-user.target
+Wants=network-online.target
+
+[Container]
+Image={{ safr_images.auth }}
+ContainerName=auth_{{ arch }}_{{ app_ver }}
+
+PublishPort={{ auth_port }}:3001
+
+# Uncomment the following line if you want to include the volume mount
+# Volume={{ auth_vol }}:Z
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

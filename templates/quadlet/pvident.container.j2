@@ -1,0 +1,24 @@
+[Unit]
+Description=Paravision Identity  Container {{ app_ver }}
+Requires=pvdb_{{arch}}_{{app_ver}}.service
+After=network-online.target multi-user.target
+Wants=network-online.target
+
+[Container]
+Image={{pv_images.identity }}
+ContainerName=ident_{{arch}}_{{app_ver}}
+# Environment variables
+Environment=TZ={{tz}}
+Environment=HTTP_PROXY=on
+Environment=POSTGRES_URI=postgresql://{{pvdb_db_user}}:{{pvdb_db_pwd}}@{{host_ip}}:{{pv_db_port}}/{{pvdb_db_name}}?sslmode=disable
+PublishPort=5656:5656
+PublishPort={{pv_ident_port}}:8080
+
+
+[Service]
+Restart=always
+RestartSec=10
+TimeoutStartSec=300
+
+[Install]
+WantedBy=default.target

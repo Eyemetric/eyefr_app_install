@@ -1,0 +1,37 @@
+[Unit]
+Description=Paravision Processor Container {{ app_ver }}
+After=network-online.target multi-user.target
+Wants=network-online.target
+
+[Container]
+Image={{ pv_images.processor }}
+ContainerName=proc_{{ arch }}_{{ app_ver }}
+
+{% if arch == 'gpu' %}
+AddDevice=nvidia.com/gpu=all
+SecurityLabelDisable=true
+Environment=NVIDIA_VISIBLE_DEVICES=nvidia.com/gpu=all
+Environment=NVIDIA_DRIVER_CAPABILITIES=all
+{% endif %}
+
+Environment=TZ={{ tz }}
+Environment=PV_HTTP_INTERFACE=on
+Environment=PV_INFERENCE_WORKERS={{ processor_pv_inference_workers }} 
+# Port publishing
+PublishPort=50051:50051
+PublishPort={{ pv_proc_port}}:8081
+
+# Uncomment and adjust the following line if you want to use the volume mount
+# Volume={{pvstrm_vol}}:/home/streaming/app:Z
+
+[Service]
+Restart=always
+RestartSec=10
+TimeoutStartSec=300
+
+{% if arch == 'gpu' %}
+ExecStartPre=/bin/sh -c 'nvidia-smi > /dev/null 2>&1 || (echo "NVIDIA GPU not ready" && exit 1)'
+{% endif %}
+
+[Install]
+WantedBy=default.target

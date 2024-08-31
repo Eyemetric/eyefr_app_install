@@ -1,0 +1,29 @@
+[Unit]
+Description=EyeFr Facade (rev. proxy) {{ app_ver }}
+After=network-online.target multi-user.target
+Wants=network-online.target
+
+[Container]
+Image={{ safr_images.facade }}
+ContainerName=revproxy_{{ arch }}_{{ app_ver }}
+
+Environment=HOST_IP={{ host_ip }}
+
+PublishPort={{ facade_port }}:80
+PublishPort={{ facade_ssl_port }}:443
+PublishPort={{ facade_ssl_port }}:443/udp
+
+Volume={{ caddy_file }}:/etc/caddy/Caddyfile:Z
+Volume={{ caddy_certs }}:/data/caddy/pki/authorities/local:Z
+Volume={{ caddy_cam_app }}:/srv/bolo:Z
+Volume={{ caddy_fr_analyze_app }}:/srv/analyze:Z
+#Volume=caddy_data:/data
+#Volume=caddy_config:/config
+
+Network=host
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

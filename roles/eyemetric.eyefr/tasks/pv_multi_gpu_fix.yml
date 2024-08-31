@@ -5,6 +5,7 @@
 # Ihave container gpu access configured.
 # this should be temporary
 - name: paravsion multi-gpu workaround code
+  when: "'gpu' in group_names"
   block:
     - name: Copy a paravision proc fix
       ansible.builtin.copy:
@@ -25,4 +26,3 @@
         group: eyemetric # Optional: Specify group
         mode: "777" # Optional: Set permissions
       become: true # Optional: Use 'become' to become another user, often used for permissions.
-  when: "'gpu' in group_names"

@@ -1,0 +1,57 @@
+---
+# setup the server to control our containers using quadlet and systemd.
+
+#ensure the app_name/app_ver directory is created
+- name: "Configure containers for quadlet and systemd"
+  block:
+    - name: "create the quadlet directory for app"
+      file:
+        path: "/home/{{ eyemetric_user }}/.config/containers/systemd/{{ app_name }}/{{app_ver}}"
+        state: directory
+        owner: "{{ eyemetric_user }}"
+        group: "{{ eyemetric_group }}"
+        mode: "0744"
+
+    - name: Copy Quadlet container files
+      ansible.builtin.template:
+        src: "templates/quadlet/{{ item }}.container.j2"
+        dest: "/home/{{eyemetric_user}}/.config/containers/systemd/{{app_name}}/{{app_ver}}/{{ item }}_{{arch}}_{{app_ver}}.container"
+        owner: "{{ eyemetric_user }}"
+        group: "{{ eyemetric_group }}"
+        mode: "0644"
+      loop:
+        - pvdb
+        - pvident
+        - pvprocessor
+        - pvstream
+        - frdb
+        - frapi
+        - cam_server
+        - facade
+        - rtsp_webrtc
+        - auth
+
+  tags:
+    - quadlet
+
+- name: Copy Quadlet container files
+  ansible.builtin.template:
+    src: "templates/quadlet/{{ item }}.container.j2"
+    dest: "/home/{{eyemetric_user}}/.config/containers/systemd/{{app_name}}/{{app_ver}}/{{ item }}_{{arch}}_{{app_ver}}.container"
+    owner: "{{ eyemetric_user }}"
+    group: "{{ eyemetric_group }}"
+    mode: "0644"
+  loop:
+    - frdb
+    - frapi
+    - cam_server
+    - facade
+    - rtsp_webrtc
+    - auth
+  notify: Reload user systemd
+
+- name: Reload user systemd
+  ansible.builtin.systemd:
+    daemon_reload: yes
+    scope: user
+  become: false

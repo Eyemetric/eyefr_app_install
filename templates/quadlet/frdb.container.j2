@@ -1,0 +1,23 @@
+[Unit]
+Description=EyeFR DB Container {{ app_ver }}
+After=network-online.target multi-user.target
+Wants=network-online.target
+
+[Container]
+Image={{ safr_images.frdb }}
+ContainerName=frdb_{{ arch }}_{{app_ver}}
+Environment=POSTGRES_USER={{ frdb_user }}
+Environment=POSTGRES_PASSWORD={{ frdb_pwd }}
+Environment=POSTGRES_DB={{ frdb_name }}
+Environment=TZ={{ tz }}
+
+PublishPort={{ frdb_port }}:5432
+
+Volume={{ frdb_data_vol }}:Z
+
+[Service]
+Restart=always
+TimeoutStartSec=180
+
+[Install]
+WantedBy=default.target

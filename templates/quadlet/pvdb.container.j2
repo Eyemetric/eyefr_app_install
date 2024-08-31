@@ -1,0 +1,23 @@
+[Unit]
+Description=Paravision DB {{app_ver}} Container
+After=network-online.target multi-user.target
+Wants=network-online.target
+
+[Container]
+Image={{ pv_images.pvdb }}
+ContainerName=pvdb_{{arch}}_{{app_ver}}
+Environment=POSTGRES_USER={{pvdb_db_user}}
+Environment=POSTGRES_PASSWORD={{ pvdb_db_pwd }}
+Environment=POSTGRES_DB={{ pvdb_db_name }}
+Environment=TZ={{ tz }}
+
+PublishPort={{ pv_db_port }}:5432
+
+Volume={{ pvdb_db_data_vol }}:Z
+
+[Service]
+Restart=always
+TimeoutStartSec=180
+
+[Install]
+WantedBy=default.target

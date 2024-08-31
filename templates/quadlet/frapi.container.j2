@@ -1,0 +1,30 @@
+[Unit]
+Description=EyerFr API Container {{ app_ver }} 
+After=network-online.target multi-user.target
+Wants=network-online.target
+
+[Container]
+Image={{ safr_images.fr_api }}
+ContainerName=frapi_{{ arch }}_{{app_ver}}
+
+Environment=SAFR_DB_ADDR={{ host_ip }}
+Environment=SAFR_DB_PORT={{ frdb_port }}
+Environment=FR_BACKEND={{ fr_backend }} 
+Environment=CV_URL={{ cv_url }}
+Environment=PV_IDENT_URL={{ pv_ident_url }}
+Environment=PV_PROC_URL={{ pv_proc_url }}
+Environment=MIN_MATCH={{ fr_api_min_match }}
+Environment=MATCH_EXPIRES={{ fr_api_match_expires }}
+Environment=MIN_QUALITY={{ fr_api_min_quality }}
+Environment=MIN_DUPE_MATCH={{ fr_api_min_dupe_match }}
+Environment=TPASS_USER={{ tpass_user }}
+Environment=TPASS_PWD={{ tpass_pwd }}
+Environment=TPASS_ADDR={{ tpass_addr }}
+Environment=RUST_LOG={{ fr_api_log_level }}
+Environment=USE_TLS=false
+Environment=TZ={{ tz }}
+
+PublishPort={{ fr_api_port }}:3000
+
+[Install]
+WantedBy=default.target

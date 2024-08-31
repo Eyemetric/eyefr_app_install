@@ -72,18 +72,18 @@
         group: "{{ eyemetric_group }}"
         mode: "0774"
 
-    - name: Find Sites files and subdirectories
-      ansible.builtin.find:
-        paths: "{{app_dir}}/sites"
-        file_type: any
-        hidden: yes # Set to 'yes' if you also want to delete hidden files and subdirectories
-      register: files_to_delete
+    #   - name: Find Sites files and subdirectories
+    #     ansible.builtin.find:
+    #       paths: "{{app_dir}}/sites"
+    #       file_type: any
+    #       hidden: yes # Set to 'yes' if you also want to delete hidden files and subdirectories
+    #     register: files_to_delete
 
-    - name: Delete all files and subdirectories
-      ansible.builtin.file:
-        path: "{{ item.path }}"
-        state: absent
-      loop: "{{ files_to_delete.files }}"
+    #   - name: Delete all files and subdirectories
+    #     ansible.builtin.file:
+    #       path: "{{ item.path }}"
+    #       state: absent
+    #     loop: "{{ files_to_delete.files }}"
 
     - name: copy sites from assets to tmp dir
       become: false
@@ -93,7 +93,7 @@
         {{ oci_cmd  }} cp assets:/fr-analyze {{app_dir}}/sites
 
 - name: Stop podman assets container
-  become: no
+  become: false
   containers.podman.podman_container:
     name: assets
     state: stopped

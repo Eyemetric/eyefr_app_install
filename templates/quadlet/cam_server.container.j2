@@ -1,0 +1,34 @@
+[Unit]
+Description=EyeFR CamServer Container {{app_ver}} 
+After=network-online.target multi-user.target
+Wants=network-online.target
+
+[Container]
+Image={{ safr_images.cam_server }}
+ContainerName=camserver_{{ arch }}_{{ app_ver }}
+
+Environment=FR_DB={{ host_ip }}
+Environment=FR_DB_PORT={{ frdb_port }}
+Environment=FR_DB_USER={{ frdb_user }}
+Environment=FR_DB_PWD={{ frdb_pwd }}
+Environment=FR_API={{ fr_api_url }}
+Environment=CAM_SRV_MIN_MATCH={{ cam_srv_min_match }}
+Environment=CAM_SRV_MATCH_EXPIRES={{ cam_srv_match_expires }}
+Environment=CAM_SRV_MIN_QUALITY={{ cam_srv_min_quality }}
+Environment=CAM_SRV_MIN_DUPE_MATCH={{ cam_srv_min_dupe_match }}
+Environment=CAM_SRV_LOG_DETECTIONS={{ cam_srv_log_detections }}
+Environment=CAM_SRV_RETAIN_DETECTION_IMAGES={{ cam_srv_retain_detection_images }}
+Environment=PV_ALERTS_URL={{ pv_alerts_ws }}
+Environment=PV_DETECTION_URL={{ pv_detection_ws }}
+Environment=PV_STREAM_URL={{ pv_stream_url }}
+Environment=RTSP_API_URL={{ rtsp_api_url }}
+Environment=RTSP_CAM_PROXY_URL={{ rtsp_cam_proxy_url }}
+
+PublishPort={{ cam_srv_port }}:3000
+
+[Service]
+Restart=always
+TimeoutStartSec=180
+
+[Install]
+WantedBy=default.target

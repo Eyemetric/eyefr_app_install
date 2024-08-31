@@ -40,48 +40,6 @@
   loop:
     - { src: "Caddyfile.j2", dest: "Caddyfile" }
     - { src: "rtsp-webrtc.json.j2", dest: "rtsp-webrtc.json" }
-  tags:
-    - templ
-
-- name: Copy compose files to server
-  #ansible.builtin.template:
-  copy:
-    src: "files/compose/{{ item.src }}"
-    dest: "{{ app_dir }}/compose/{{ item.dest }}"
-    owner: "{{ eyemetric_user }}"
-    group: "{{ eyemetric_user }}"
-  loop:
-    - { src: "init.sh", dest: "init.sh" }
-    - { src: "kill.sh", dest: "kill.sh" }
-    - { src: "paravision-dkup.yml", dest: "paravision-dkup.yml" }
-    - { src: "paravision-pdup.yml", dest: "paravision-pdup.yml" }
-    - { src: "safr-dkup.yml", dest: "safr-dkup.yml" }
-    - { src: "safr-pdup.yml", dest: "safr-pdup.yml" }
-    - { src: "vars.yml", dest: "vars.yml" }
-  tags:
-    - templ
-    - compose
-
-# overwrite any gpu specific files from previous task
-- name: Copy compose cpu specific files to server
-  ansible.builtin.copy:
-    src: "files/compose/{{ item.src }}"
-    dest: "{{ app_dir }}/compose/{{ item.dest }}"
-    owner: "{{ eyemetric_user }}"
-    group: "{{ eyemetric_user }}"
-  loop:
-    - { src: "paravision-pdup-cpu.yml", dest: "paravision-pdup-cpu.yml" }
-    - { src: "paravision-dkup-cpu.yml", dest: "paravision-dkup-cpu.yml" }
-
-- name: Set executable permissions on compose shell scripts
-  ansible.builtin.file:
-    path: "{{ app_dir }}/compose/{{ item.dest }}"
-    mode: "0755"
-  loop:
-    - { src: "init.sh", dest: "init.sh" }
-    - { src: "kill.sh", dest: "kill.sh" }
-  tags:
-    - templ
 
 # assets useful libs for our sites. used by auth only at the moment.
 - name: copy web assets
@@ -93,5 +51,3 @@
     group: eyemetric # Optional: Specify group
     mode: "777" # Optional: Set permissions
   become: true # Optional: Use 'become' to become another user, often used for permissions.
-  tags:
-    - web_assets
