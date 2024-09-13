@@ -1,0 +1,17 @@
+[Unit]
+Description=Start EyeFR {{ arch }} {{app_ver}} pod after reboot
+After=network-online.target multi-user.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+{% if arch == 'gpu' %}
+ExecStartPre=/bin/sh -c 'nvidia-smi > /dev/null 2>&1 || (echo "NVIDIA GPU not ready" && exit 1)'
+{% endif %}
+
+ExecStart={{app_dir}}/compose/bashman_{{arch}}
+ExecStop=podman pod stop eyefr_{{arch}}_{{app_ver}}
+RemainAfterExit=yes
+
+[Install]
+WantedBy=default.target

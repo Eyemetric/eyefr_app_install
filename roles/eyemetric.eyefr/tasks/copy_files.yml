@@ -19,6 +19,22 @@
     - "{{ app_dir }}/utils"
     - "{{ app_dir }}/logs"
 
+- name: Copy config files to server
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ app_dir }}/compose/{{ item.dest }}"
+    owner: "{{ eyemetric_user }}"
+    group: "{{ eyemetric_user }}"
+  loop:
+    - { src: "bashman.j2", dest: "bashman_{{arch}}" }
+
+- name: Ensure the Podman start script is executable
+  file:
+    path: "{{ app_dir }}/compose/bashman_{{arch}}"
+    mode: "0755"
+  become: true
+  become_user: "{{ eyemetric_user }}"
+
 - name: Copy utility scripts and fr-cli tool and certs
   copy:
     src: "{{ item.src }}"

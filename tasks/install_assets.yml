@@ -4,24 +4,26 @@
     paths: "{{ app_dir }}/data"
     file_type: directory
   register: data_dir_contents
-  tags:
-    - assets
+  tags: ["data"]
 
 - name: Check if the sites directory is empty
   ansible.builtin.find:
     paths: "{{ app_dir }}/sites"
     file_type: any
   register: sites_dir_contents
+  tags: ["sites"]
 
-- name: setup pre made data volumes as starting point
+- name: start assets container
   become: false
   register: data_container
-  shell: "podman run -d --rm --name assets {{ safr_images.assets }}"
+  shell: "podman run -d --rm --replace --name assets {{ safr_images.assets }}"
+  tags: ["sites", "data"]
 # if we run into a situation where data exists (it shouldn't since this is install not update)
 # NOTE: This is all a bit of a defensive hack. We should really be doing data migrations.
 # this is just a precaution in the case where we run ansible and there's existing data. destroying that would be bad.
 - name: Backup Data volumes before overwriting any existing data
   when: overwrite_data_vol and data_dir_contents.matched > 0
+  tags: ["data"]
   block:
     - name: backup existing data volumes to /tmp
       become: false
@@ -35,6 +37,7 @@
 
 - name: init data volumes
   when: overwrite_data_vol or data_dir_contents.matched == 0
+  tags: ["data"]
   block:
     - name: copy data volumes from assets to tmp dir
       become: no
@@ -62,6 +65,7 @@
 - name: prepare sites
   #when: sites_dir_contents.matched > 0
   when: sites_dir_contents.matched > 0
+  tags: ["sites"]
   block:
     - name: backup existing sites to /tmp
       become: false
@@ -89,11 +93,12 @@
       become: false
       register: data_copy
       shell: |
-        {{ oci_cmd  }} cp assets:/cam-app {{app_dir}}/sites
-        {{ oci_cmd  }} cp assets:/fr-analyze {{app_dir}}/sites
+        podman cp assets:/cam-app {{app_dir}}/sites
+        podman cp assets:/fr-analyze {{app_dir}}/sites
 
 - name: Stop podman assets container
   become: false
+  tags: ["data", "sites"]
   containers.podman.podman_container:
     name: assets
     state: stopped

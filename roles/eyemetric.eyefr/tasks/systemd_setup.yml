@@ -15,6 +15,15 @@
     group: "{{ eyemetric_group }}"
     mode: "0777"
 
+
+- name: Create systemd eyefr pod service file
+  template:
+    src: eyefr_pod.j2
+    dest: "/home/{{ eyemetric_user }}/.config/systemd/user/eyefr_{{arch}}_{{app_ver}}.service"
+    mode: "0644"
+  become_user: "{{ eyemetric_user }}"
+
+
 - name: Enable linger for "{{ eyemetric_user }}" user
   ansible.builtin.command: "loginctl enable-linger {{ eyemetric_user }}"
 

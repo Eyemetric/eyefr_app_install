@@ -1,4 +1,4 @@
-app_ver: ""
+app_ver: "1.6.3"
 app_name: "eyefr"
 #base_dir: "/opt/eyemetric_{{app_ver}}"
 eyemetric_user: "eyemetric"

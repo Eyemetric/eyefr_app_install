@@ -29,11 +29,9 @@
 - name: create app structure and copy config files
   include_tasks: copy_files.yml
 
-- name: set up db data and copy static sites
-  include_tasks: install_assets.yml
 
-- name: apply paravision multi gpu workaround
-  include_tasks: pv_multi_gpu_fix.yml
+#- name: apply paravision multi gpu workaround
+#  include_tasks: pv_multi_gpu_fix.yml
 
 
 - name: Set unpriviledged port access to start at 80
@@ -46,6 +44,6 @@
   command: sysctl -p
 
 
-- name: ensure non-root user can start services (linger)
+- name: configure for systemd.
   include_tasks: systemd_setup.yml
  # include_tasks: systemd_user_tasks.yml

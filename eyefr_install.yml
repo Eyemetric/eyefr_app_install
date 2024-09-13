@@ -4,19 +4,14 @@
   become: true
   vars:
     ansible_become_pass: "{{ host_sudo_pass[inventory_hostname] | default(default_sudo_pass) }}"
-    release_version: "1.6.2" 
-    overwrite_data_vol: false
   roles:
     - { role: paravision.v6, tags: ["paravision"] }
-    - { role: eyemetric.eyefr, tags: ["eyefr", "assets"], vars: { app_ver: "{{ release_version }}" }}
+    - { role: eyemetric.eyefr, tags: ["eyefr"] }
 
   tasks:
-    - name: Include quadlet tasks
-      include_tasks: tasks/quadlet_config.yml
-      vars: 
-        arch: "{{ 'gpu' if 'gpu' in group_names else 'cpu' }}"
-        pv_images: "{{ pv_gpu_images if 'gpu' in group_names else pv_cpu_images }}"
-      tags: 
-        - quadlet 
-# remember to manually set eyemetric.eyefr/files/compose/vars.yml to the 
-# correct app_ver denoted here in release version.
+    - name: set up db data and copy static sites
+      tags: ["sites", "data"]
+      vars:
+        overwrite_data_vol: false
+      include_tasks: tasks/install_assets.yml
+
