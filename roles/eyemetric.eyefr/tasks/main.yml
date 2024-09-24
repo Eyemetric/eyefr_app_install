@@ -1,13 +1,10 @@
 ---
 
 - name: Set container manager
-  set_fact:
+  ansible.builtin.set_fact:
     oci_cmd: "podman"
 
-#--------------------------
-# GET the images with PODMAN
-#--------------------------
-- name: use podman login so we ca pull our images
+- name: Use podman login so we ca pull our images
   become: false
   register: podman_login
   containers.podman.podman_login:
@@ -15,35 +12,35 @@
     password: "{{ docker_pwd }}"
     registry: docker.io
 
-- name: pull SAFR containers from docker.io
+- name: Pull SAFR containers from docker.io
   become: false
   register: docker_pull
   containers.podman.podman_image:
     name: "{{ item.value }}"
   loop: "{{ safr_images | dict2items }}"
 
-- name: install tools an utilities
-  include_tasks: install_tools.yml
+- name: Install tools an utilities
+  ansible.builtin.include_tasks: install_tools.yml
 
 
-- name: create app structure and copy config files
-  include_tasks: copy_files.yml
+- name: Create app structure and copy config files
+  ansible.builtlin.include_tasks: copy_files.yml
 
 
-#- name: apply paravision multi gpu workaround
+# - name: apply paravision multi gpu workaround
 #  include_tasks: pv_multi_gpu_fix.yml
 
 
 - name: Set unpriviledged port access to start at 80
-  lineinfile:
+  lansible.builtin.lineinfile:
     path: /etc/sysctl.conf
     insertafter: EOF
     line: net.ipv4.ip_unprivileged_port_start=80
 
-- name: reload sysctl.conf
-  command: sysctl -p
+- name: Reload sysctl.conf
+  ansible.builtin.command: sysctl -p
 
 
-- name: configure for systemd.
-  include_tasks: systemd_setup.yml
+- name: Configure for systemd.
+  ansible.builtin.include_tasks: systemd_setup.yml
  # include_tasks: systemd_user_tasks.yml

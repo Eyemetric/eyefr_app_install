@@ -13,8 +13,6 @@ readonly FR_API_IMAGE="docker.io/eyemetricfr/fr-api:${APP_VER}"
 readonly CAM_SERVER_IMAGE="docker.io/eyemetricfr/cam-server:${APP_VER}"
 readonly RTSP_WEBRTC_IMAGE="docker.io/eyemetricfr/rtsp-webrtc:${APP_VER}"
 
-
-
 #These are the versions that make up an app version. They must always be these versions
 
 readonly PVDB_IMAGE="containers.paravision.ai/postgres/postgres:12.0"
@@ -32,6 +30,7 @@ readonly STREAMING_IMAGE="containers.paravision.ai/streaming/streaming:v6.0.0-op
 
 #port we may expose for pod, if necessary.
 fr_api_port=3000
+camserver_port=3010
 pvstream_port=5000
 pvdetection_port=5050
 pvalerts_port=5051
@@ -40,7 +39,6 @@ frdb_port=5433
 pvident_port=8080
 pvproc_port=8081
 rtsp_webrtc_port=8083
-
 
 # Logging function
 log() {
@@ -211,8 +209,8 @@ start_fr_api_container() {
     -e SAFR_DB_PORT=5433 \
     -e FR_BACKEND=pv \
     -e CV_URL=http://onprem-search-engine:7000 \
-    -e PV_IDENT_URL=http://localhost:8080/v4 \
-    -e PV_PROC_URL=http://localhost:8081/v6 \
+    -e PV_IDENT_URL="http://localhost:${pvident_port}/v4" \
+    -e PV_PROC_URL="http://localhost:${pvproc_port}/v6" \
     -e MIN_MATCH=0.5 \
     -e MATCH_EXPIRES=10 \
     -e MIN_QUALITY=0.8 \
@@ -246,8 +244,8 @@ start_camserver_container() {
     -e PV_ALERTS_URL=ws://localhost:5051 \
     -e PV_DETECTION_URL=ws://localhost:5050 \
     -e PV_STREAM_URL=http://localhost:5000 \
-    -e RTSP_API_URL=http://demo:demo@localhost:8083 \
-    -e RTSP_CAM_PROXY_URL=http://localhost:8083
+    -e RTSP_API_URL="http://demo:demo@localhost:${rtsp_webrtc_port}" \
+    -e RTSP_CAM_PROXY_URL="http://localhost:${rtsp_webrtc_port}"
 }
 
 start_rtsp_webrtc_container() {
@@ -277,17 +275,16 @@ main() {
     podman pod create \
       --name "${PODNAME}" \
       -p ${fr_api_port}:3000 \
+      -p ${camserver_port}:3010 \
       -p ${pvdb_port}:5432 \
       -p ${frdb_port}:5433 \
       -p ${pvstream_port}:5000 \
       -p ${pvalerts_port}:5051 \
       -p ${pvdetection_port}:5050 \
       -p ${pvident_port}:8080 \
-      -p ${pvproc_port}:8081 || #-p ${rtsp_webrtc_port}:8083  \
-      error_exit "Failed to create pod" 1
+      -p ${pvproc_port}:8081
+    #error_exit "Failed to create pod" 1
   fi
-
-
 
   # Start containers
   start_pvdb_container

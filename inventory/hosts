@@ -1,11 +1,11 @@
 [all]
-dev-home ansible_host=192.168.0.28
+#dev-home ansible_host=192.168.0.28
 #dev-home ansible_host=174.51.11.19
-fr-48 ansible_host=192.168.3.48
+fr-48 ansible_host=192.168.3.225
 
 [gpu]
 #dev-home ansible_host=192.168.0.28
-fr-48 ansible_host=192.168.3.48
+fr-48 ansible_host=192.168.3.225
 
 [cpu]
 #dev-home ansible_host=192.168.0.28
