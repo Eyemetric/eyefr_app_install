@@ -1,14 +1,14 @@
 ---
-- name: "create user dir for eyemetric.service unit"
-  file:
+- name: "Create user dir for eyemetric.service unit"
+  ansible.builtin.file:
     path: "/home/{{ eyemetric_user }}/.config/systemd/user"
     state: directory
     owner: "{{ eyemetric_user }}"
     group: "{{ eyemetric_group }}"
     mode: "0755"
 
-- name: create the .ansible/tmp dir with permissions
-  file:
+- name: Create the .ansible/tmp dir with permissions
+  ansible.builtin.file:
     path: "/home/{{ eyemetric_user }}/.ansible/tmp"
     state: directory
     owner: "{{ eyemetric_user }}"
@@ -17,19 +17,19 @@
 
 
 - name: Create systemd eyefr pod service file
-  template:
+  ansible.builtin.template:
     src: eyefr_pod.j2
-    dest: "/home/{{ eyemetric_user }}/.config/systemd/user/eyefr_{{arch}}_{{app_ver}}.service"
+    dest: "/home/{{ eyemetric_user }}/.config/systemd/user/eyefr_{{ arch }}_{{ app_ver }}.service"
     mode: "0644"
   become_user: "{{ eyemetric_user }}"
 
 
-- name: Enable linger for "{{ eyemetric_user }}" user
+- name: Enable linger for user
   ansible.builtin.command: "loginctl enable-linger {{ eyemetric_user }}"
 
 - name: Reload user systemd daemon
-  systemd:
-    daemon_reload: yes
+  ansible.builtin.systemd:
+    daemon_reload: true
     scope: user
   become: true
   become_user: "{{ eyemetric_user }}"

@@ -1,6 +1,6 @@
 ---
-- name: install Ansible
+- name: Install Ansible
   become: true
-  dnf:
+  ansible.builtin.dnf:
     name: ansible
     state: present
