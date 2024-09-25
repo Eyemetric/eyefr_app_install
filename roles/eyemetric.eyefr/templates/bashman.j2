@@ -302,16 +302,19 @@ main() {
     log "INFO" "Creating pod ${PODNAME}"
     podman pod create \
       --name "${PODNAME}" \
-      -p ${fr_api_port}:3000 \
-      -p ${camserver_port}:3010 \
-      -p ${pvdb_port}:5432 \
-      -p ${frdb_port}:5433 \
-      -p ${pvstream_port}:5000 \
-      -p ${pvalerts_port}:5051 \
-      -p ${pvdetection_port}:5050 \
-      -p ${pvident_port}:8080 \
-      -p ${pvproc_port}:8081 \
-      -p ${facade_port}:443
+      -p ${facade_port}:443 \
+      -p ${rtsp_webrtc_port}:8083
+
+    # only expose when test is needed, traffic should flow through rev.proxy
+    #-p ${fr_api_port}:3000 \
+    #-p ${camserver_port}:3010 \
+    #-p ${pvdb_port}:5432 \
+    #-p ${frdb_port}:5433 \
+    #-p ${pvstream_port}:5000 \
+    #-p ${pvalerts_port}:5051 \
+    #-p ${pvdetection_port}:5050 \
+    #-p ${pvident_port}:8080 \
+    #-p ${pvproc_port}:8081 \
     #error_exit "Failed to create pod" 1
   fi
 
