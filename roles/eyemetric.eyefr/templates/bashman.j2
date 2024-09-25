@@ -13,6 +13,9 @@ readonly FR_API_IMAGE="docker.io/eyemetricfr/fr-api:${APP_VER}"
 readonly CAM_SERVER_IMAGE="docker.io/eyemetricfr/cam-server:${APP_VER}"
 readonly RTSP_WEBRTC_IMAGE="docker.io/eyemetricfr/rtsp-webrtc:${APP_VER}"
 
+readonly FACADE_IMAGE="docker.io/eyemetricfr/facade:${APP_VER}"
+readonly AUTH_IMAGE="docker.io/eyemetricfr/auth:${APP_VER}"
+
 #These are the versions that make up an app version. They must always be these versions
 
 readonly PVDB_IMAGE="containers.paravision.ai/postgres/postgres:12.0"
@@ -39,6 +42,9 @@ frdb_port=5433
 pvident_port=8080
 pvproc_port=8081
 rtsp_webrtc_port=8083
+
+facade_port=443
+auth_port=42069
 
 # Logging function
 log() {
@@ -254,11 +260,33 @@ start_rtsp_webrtc_container() {
   local container="rtsp_webrtc_{{arch}}_${APP_VER}"
   local volume="${APP_DIR}/config/rtsp-webrtc.json:/config/config.json:Z"
 
+  # we might get lower latency with host network.
+  # --network host
+
   start_container "${container}" "${image}" \
     --restart always \
-    --network host \
     -p ${rtsp_webrtc_port}:8083 \
     -v "${volume}"
+}
+
+# ---------------------------------------------------
+# This is a reverse proxy and a static file server
+# ---------------------------------------------------
+start_facade_container() {
+
+  local image="${FACADE_IMAGE}"
+  local container="facade_gpu_${APP_VER}"
+  local cam_app_volume="${APP_DIR}/sites/cam-app:/srv/bolo:Z"
+  local fr_analyze_app_volume="${APP_DIR}/sites/fr-analyze:/srv/analyze:Z"
+  local config_volume="${APP_DIR}/config/Caddyfile:/etc/caddy/Caddyfile:Z"
+  local certs_volume="${APP_DIR}/certs:/data/caddy/pki/authorities/local:Z"
+
+  start_container "${container}" "${image}" \
+    --restart always \
+    -v ${cam_app_volume} \
+    -v ${fr_analyze_app_volume} \
+    -v ${config_volume} \
+    -v ${certs_volume}
 }
 
 main() {
@@ -282,7 +310,8 @@ main() {
       -p ${pvalerts_port}:5051 \
       -p ${pvdetection_port}:5050 \
       -p ${pvident_port}:8080 \
-      -p ${pvproc_port}:8081
+      -p ${pvproc_port}:8081 \
+      -p ${facade_port}:443
     #error_exit "Failed to create pod" 1
   fi
 
@@ -295,6 +324,7 @@ main() {
   start_fr_api_container
   start_camserver_container
   start_rtsp_webrtc_container
+  start_facade_container
 
   log "INFO" "All containers started successfully"
 }
